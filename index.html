@@ -126,7 +126,26 @@
     background: var(--surface) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%239aa2ac' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='11' cy='11' r='7'/%3E%3Cline x1='21' y1='21' x2='16.65' y2='16.65'/%3E%3C/svg%3E") no-repeat 14px center;
     padding-left: 38px;
   }
-  .campo-preco { position: relative; flex: none; width: 168px; }
+  .btn-ordenar {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex: none;
+    padding: 10px 14px;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    border-radius: 10px;
+    font-size: 13px;
+    font-weight: 600;
+    font-family: inherit;
+    color: var(--muted);
+    cursor: pointer;
+    transition: border-color .15s ease, color .15s ease, background .15s ease;
+  }
+  .btn-ordenar:hover { border-color: rgba(255, 255, 255, .2); }
+  .btn-ordenar.ativo { border-color: var(--accent); color: var(--accent); background: var(--accent-soft); }
+  .btn-ordenar .icone-ordenar { flex-shrink: 0; transition: transform .2s ease; }
+  .btn-ordenar.asc .icone-ordenar { transform: rotate(180deg); }
 
   .filtro-cores { display: flex; align-items: center; gap: 7px; flex-wrap: wrap; }
   .swatch-cor {
@@ -155,16 +174,6 @@
     background-position: center;
     flex-shrink: 0;
   }
-  .campo-preco .prefixo-moeda {
-    position: absolute;
-    left: 14px;
-    top: 50%;
-    transform: translateY(-50%);
-    font-size: 14px;
-    color: var(--muted);
-    pointer-events: none;
-  }
-  .campo-preco input.preco { width: 100%; padding-left: 34px; }
   #contador { color: rgba(255, 255, 255, .7); font-size: 13px; margin-top: 12px; font-weight: 500; }
 
   .banner-promo {
@@ -643,10 +652,10 @@
           <option value="">Todos os fabricantes</option>
         </select>
         <div class="filtro-cores" id="corFiltroSwatches"></div>
-        <div class="campo-preco">
-          <span class="prefixo-moeda">R$</span>
-          <input type="number" step="100" min="0" class="preco" id="precoMax" placeholder="Valor maximo">
-        </div>
+        <button type="button" class="btn-ordenar" id="btnOrdenarPreco">
+          <svg class="icone-ordenar" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14"/><path d="M18 13l-6 6-6-6"/></svg>
+          <span id="ordenarLabel">Ordenar por preco</span>
+        </button>
       </div>
       <div id="contador"></div>
     </div>
@@ -1253,14 +1262,39 @@
     return div;
   }
 
-  const inputPrecoMax = document.getElementById("precoMax");
+  const btnOrdenarPreco = document.getElementById("btnOrdenarPreco");
+  const ordenarLabel = document.getElementById("ordenarLabel");
+  let ordemPreco = null;
+
+  function atualizarBotaoOrdenar() {
+    if (ordemPreco === "desc") {
+      ordenarLabel.textContent = "Maior preco";
+      btnOrdenarPreco.classList.remove("asc");
+      btnOrdenarPreco.classList.add("ativo");
+    } else if (ordemPreco === "asc") {
+      ordenarLabel.textContent = "Menor preco";
+      btnOrdenarPreco.classList.add("asc");
+      btnOrdenarPreco.classList.add("ativo");
+    } else {
+      ordenarLabel.textContent = "Ordenar por preco";
+      btnOrdenarPreco.classList.remove("asc");
+      btnOrdenarPreco.classList.remove("ativo");
+    }
+  }
+
+  btnOrdenarPreco.addEventListener("click", () => {
+    if (ordemPreco === null) ordemPreco = "desc";
+    else if (ordemPreco === "desc") ordemPreco = "asc";
+    else ordemPreco = null;
+    atualizarBotaoOrdenar();
+    aplicarFiltro();
+  });
 
   function aplicarFiltro() {
     const termo = document.getElementById("busca").value.trim().toLowerCase();
     const catSel = selCategoria.value;
     const fabSel = selFabricante.value;
     const corSel = corSelecionada;
-    const precoMax = inputPrecoMax.value === "" ? null : parseFloat(inputPrecoMax.value);
     const grid = document.getElementById("grid");
     grid.innerHTML = "";
 
@@ -1268,14 +1302,20 @@
       if (catSel && p.categoria !== catSel) return false;
       if (fabSel && p.fabricante !== fabSel) return false;
       if (corSel && p.cor !== corSel) return false;
-      if (precoMax !== null) {
-        if (p.menorPreco === null) return false;
-        if (p.menorPreco > precoMax) return false;
-      }
       if (!termo) return true;
       const alvo = (p.produto + " " + p.categoria + " " + (p.fabricante || "") + " " + (p.cor || "") + " " + (p.specs || "")).toLowerCase();
       return alvo.includes(termo);
     });
+
+    if (ordemPreco) {
+      filtrados.sort((a, b) => {
+        const pa = a.menorPreco, pb = b.menorPreco;
+        if (pa === null && pb === null) return 0;
+        if (pa === null) return 1;
+        if (pb === null) return -1;
+        return ordemPreco === "asc" ? pa - pb : pb - pa;
+      });
+    }
 
     filtrados.forEach(p => grid.appendChild(renderCard(p)));
     document.getElementById("contador").textContent = filtrados.length + " produto(s) encontrado(s)";
@@ -1285,7 +1325,7 @@
   document.getElementById("busca").addEventListener("input", aplicarFiltro);
   selCategoria.addEventListener("change", aplicarFiltro);
   selFabricante.addEventListener("change", aplicarFiltro);
-  inputPrecoMax.addEventListener("input", aplicarFiltro);
+  atualizarBotaoOrdenar();
   aplicarFiltro();
 </script>
 </body>
