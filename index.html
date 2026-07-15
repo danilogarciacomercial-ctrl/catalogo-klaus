@@ -1107,6 +1107,8 @@
     if (fotos.length > 0) {
       const img = document.createElement("img");
       img.className = "foto";
+      img.loading = "lazy";
+      img.decoding = "async";
       img.src = fotos[0];
       img.alt = p.produto;
       img.addEventListener("click", () => abrirLightbox(fotos, 0, p.produto));
