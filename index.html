@@ -164,7 +164,6 @@
   .swatch-cor:hover { transform: scale(1.1); }
   .swatch-cor.ativa { outline: 2px solid var(--accent); outline-offset: 1px; }
 
-  .card .cor-linha { display: flex; align-items: center; gap: 6px; }
   .card .swatch-cor-mini {
     width: 16px;
     height: 16px;
@@ -173,6 +172,7 @@
     background-size: cover;
     background-position: center;
     flex-shrink: 0;
+    margin-top: 2px;
   }
   #contador { color: rgba(255, 255, 255, .7); font-size: 13px; margin-top: 12px; font-weight: 500; }
 
@@ -286,9 +286,8 @@
     border-radius: 999px;
   }
   .card .fabricante { font-size: 12px; color: var(--muted); }
-  .card .cor { font-size: 12.5px; color: var(--text); }
   .card h3 { margin: 2px 0 0; font-family: var(--font-display); font-size: 16.5px; font-weight: 700; letter-spacing: -.01em; }
-  .card .specs { font-size: 13px; color: var(--muted); line-height: 1.4; }
+  .card .specs { display: flex; align-items: flex-start; gap: 7px; font-size: 13px; color: var(--muted); line-height: 1.4; }
   .card .precos { margin-top: auto; padding-top: 8px; border-top: 1px solid var(--border); }
   .card .precos .linha { font-family: var(--font-display); font-size: 15px; font-weight: 700; color: var(--accent); letter-spacing: -.01em; }
   .card .precos .linha .tam { font-family: var(--font-body); font-weight: 500; color: var(--muted); }
@@ -1261,29 +1260,26 @@
       conteudo.appendChild(fab);
     }
 
-    if (p.specs) {
+    if (p.specs || p.cor) {
       const specs = document.createElement("div");
       specs.className = "specs";
-      specs.textContent = p.specs;
-      conteudo.appendChild(specs);
-    }
-
-    if (p.cor) {
-      const corLinha = document.createElement("div");
-      corLinha.className = "cor-linha";
-      const bolinha = document.createElement("span");
-      bolinha.className = "swatch-cor-mini";
-      if (p.amostraCor) {
-        bolinha.style.background = "url('" + p.amostraCor + "') center/cover";
-      } else {
-        bolinha.style.background = corAproximada(p.cor);
+      if (p.cor) {
+        const bolinha = document.createElement("span");
+        bolinha.className = "swatch-cor-mini";
+        bolinha.title = "Cor: " + p.cor;
+        if (p.amostraCor) {
+          bolinha.style.background = "url('" + p.amostraCor + "') center/cover";
+        } else {
+          bolinha.style.background = corAproximada(p.cor);
+        }
+        specs.appendChild(bolinha);
       }
-      corLinha.appendChild(bolinha);
-      const cor = document.createElement("span");
-      cor.className = "cor";
-      cor.textContent = "Cor: " + p.cor;
-      corLinha.appendChild(cor);
-      conteudo.appendChild(corLinha);
+      if (p.specs) {
+        const textoSpecs = document.createElement("span");
+        textoSpecs.textContent = p.specs;
+        specs.appendChild(textoSpecs);
+      }
+      conteudo.appendChild(specs);
     }
 
     if (p.situacao) {
