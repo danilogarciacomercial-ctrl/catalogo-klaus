@@ -758,14 +758,13 @@
   atualizarRelogio();
   setInterval(atualizarRelogio, 1000);
 
-  const LOGIN_USUARIO = "admin";
-  const LOGIN_SENHA = "klaus2026";
+  const USUARIOS = [{"usuario":"admin","senha":"klaus2026"},{"usuario":"marcelo","senha":"Klaus2026"}];
   const loginBox = document.getElementById("loginBox");
   const telaBloqueio = document.getElementById("telaBloqueio");
   const areaConteudo = document.getElementById("areaConteudo");
 
   function estaLogado() {
-    return sessionStorage.getItem("catalogoLogado") === "1";
+    return !!sessionStorage.getItem("catalogoLogadoUsuario");
   }
 
   function atualizarAcesso() {
@@ -775,8 +774,9 @@
   }
 
   function fazerLogin(usuario, senha) {
-    if (usuario === LOGIN_USUARIO && senha === LOGIN_SENHA) {
-      sessionStorage.setItem("catalogoLogado", "1");
+    const encontrado = USUARIOS.find(u => u.usuario === usuario && u.senha === senha);
+    if (encontrado) {
+      sessionStorage.setItem("catalogoLogadoUsuario", encontrado.usuario);
       renderLoginLogado();
       atualizarAcesso();
       return true;
@@ -811,10 +811,10 @@
   function renderLoginLogado() {
     loginBox.classList.add("logado");
     loginBox.innerHTML =
-      '<span class="usuario-logado">Ola, ' + LOGIN_USUARIO + '</span>' +
+      '<span class="usuario-logado">Ola, ' + (sessionStorage.getItem("catalogoLogadoUsuario") || "") + '</span>' +
       '<button class="sair" id="logoutBtn">Sair</button>';
     document.getElementById("logoutBtn").addEventListener("click", () => {
-      sessionStorage.removeItem("catalogoLogado");
+      sessionStorage.removeItem("catalogoLogadoUsuario");
       renderLoginFormulario();
       atualizarAcesso();
     });
